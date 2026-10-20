@@ -173,9 +173,6 @@ flowchart LR
 ---
 
 ## 🗂️ Project Structure
----
-
-## 🗂️ Project Structure
 
 brain-tumor-segmentation/
 │
@@ -227,15 +224,10 @@ brain-tumor-segmentation/
 ## 🛠️ Tech Stack
 
 `PyTorch` `segmentation-models-pytorch` `albumentations`
-`einops` `OpenCV`  `Google Colab` `NumPy`
+`OpenCV` `Google Colab` `NumPy`
 
 ---
 
-<div align="center">
-
-⭐ **Star this repo if you found it helpful!**
-
-</div>
 """
 
 with open('/content/brain_tumor_segmentation/README.md', 'w') as f:
