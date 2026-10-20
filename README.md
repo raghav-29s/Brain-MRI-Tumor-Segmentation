@@ -2,10 +2,6 @@
 
 <div align="center">
 
-![Python](https://img.shields.io/badge/Python-3.10-blue?style=for-the-badge&logo=python)
-![PyTorch](https://img.shields.io/badge/PyTorch-2.0-red?style=for-the-badge&logo=pytorch)
-![Streamlit](https://img.shields.io/badge/Streamlit-1.35-orange?style=for-the-badge&logo=streamlit)
-![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
 **Automatic pixel-level tumor segmentation from brain MRI scans using three deep learning architectures.**
 
