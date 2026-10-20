@@ -1,9 +1,9 @@
-"""# 🧠 Brain Tumor Segmentation using Deep Learning
+readme_content = """# 🧠 Brain Tumor Segmentation using Deep Learning
 
 <div align="center">
-
-
-**Automatic pixel-level tumor segmentation from brain MRI scans using three deep learning architectures.**
+  
+### Automatic pixel-level tumor segmentation from brain MRI scans
+### using three deep learning architectures
 
 </div>
 
@@ -11,158 +11,152 @@
 
 ## 📌 Overview
 
-This project implements and compares three deep learning models for brain tumor segmentation:
+Brain tumor segmentation identifies **exactly which pixels** in an MRI scan belong to a tumor.
 
-- **U-Net** — classic encoder-decoder with skip connections (baseline)
-- **TransUNet** — U-Net enhanced with Vision Transformer in the bottleneck
-- **ResNet50-UNet** — U-Net with pretrained ImageNet encoder (best performance)
+| Task | Output | Example |
+|------|--------|---------|
+| Classification | Label | "Tumor present" |
+| Detection | Bounding box | Rectangle around tumor |
+| **Segmentation** ← this project | Pixel mask | Exact tumor region highlighted |
 
-The models are trained on the **LGG Brain MRI Segmentation dataset** and deployed via a **Streamlit web app** where you can upload any brain MRI and instantly get a tumor mask prediction.
+This project implements and compares **3 deep learning architectures**, trains them on real MRI data, and deploys the best model as a **Streamlit web app**.
 
 ---
 
 ## 🏆 Results
 
-| Model | Dice Score | IoU | Precision | Recall |
-|-------|:----------:|:---:|:---------:|:------:|
-| U-Net (scratch) | 0.5164 | 0.3758 | 0.4340 | 0.7582 |
+| Model | Dice ↑ | IoU ↑ | Precision ↑ | Recall ↑ |
+|-------|:------:|:-----:|:-----------:|:--------:|
+| U-Net (baseline) | 0.5164 | 0.3758 | 0.4340 | 0.7582 |
 | TransUNet | 0.6525 | 0.5264 | 0.6152 | 0.8097 |
 | **ResNet50-UNet** ⭐ | **0.7351** | **0.6178** | **0.7610** | **0.7535** |
 
-> 🚀 ResNet50-UNet with pretrained ImageNet encoder achieved **42% improvement** in Dice Score over the U-Net baseline.
+> 🚀 ResNet50-UNet achieved **42% improvement** in Dice Score over U-Net baseline using pretrained ImageNet encoder.
 
 ---
 
 ## 🧬 Architecture
 
-### 1️⃣ U-Net — The Baseline
+### 1️⃣ U-Net — Baseline
 
-> Classic encoder-decoder with skip connections. Trained from scratch.
+```mermaid
+flowchart TD
+    A[Input MRI\\n3 × 128 × 128] --> B[Encoder Block 1\\nConv 64]
+    B --> C[Encoder Block 2\\nConv 128]
+    C --> D[Encoder Block 3\\nConv 256]
+    D --> E[Encoder Block 4\\nConv 512]
+    E --> F[Bottleneck\\nConv 1024]
+    F --> G[Decoder Block 4\\nUpConv 512]
+    G --> H[Decoder Block 3\\nUpConv 256]
+    H --> I[Decoder Block 2\\nUpConv 128]
+    I --> J[Decoder Block 1\\nUpConv 64]
+    J --> K[Output Mask\\n1 × 128 × 128]
 
+    B -- skip --> J
+    C -- skip --> I
+    D -- skip --> H
+    E -- skip --> G
 
-Input MRI (3 × 128 × 128)
-│
-▼
-┌─────────────────────┐
-│ ENCODER │ Extracts features, reduces spatial size
-│ Conv(64) ──────────────────────────────────────┐
-│ Conv(128) ──────────────────────────────────┐ │
-│ Conv(256) ──────────────────────────────┐ │ │
-│ Conv(512) ──────────────────────────┐ │ │ │
-└────────────────────┬┘ │ │ │ │
-▼ │ │ │ │
-┌─────────────────────┐ │ │ │ │ skip
-│ BOTTLENECK │ │ │ │ │ connections
-│ Conv(1024) │ │ │ │ │
-└────────────────────┬┘ │ │ │ │
-▼ │ │ │ │
-┌─────────────────────┐ │ │ │ │
-│ DECODER │ │ │ │ │
-│ UpConv(512) ◄──────────────────────┘ │ │ │
-│ UpConv(256) ◄──────────────────────────┘ │ │
-│ UpConv(128) ◄──────────────────────────────┘ │
-│ UpConv(64) ◄──────────────────────────────────┘
-└────────────────────┬┘
-▼
-Mask (1 × 128 × 128)
+    style A fill:#4A90D9,color:#fff
+    style F fill:#E67E22,color:#fff
+    style K fill:#27AE60,color:#fff
+```
 
+**Key idea:** Skip connections pass encoder features directly to decoder — preserving fine spatial details lost during downsampling.
 
-**Limitation:** CNN only sees small local regions — misses global tumor shape.
+**Limitation:** CNN only sees local regions — misses global tumor shape context.
 
 ---
 
 ### 2️⃣ TransUNet — CNN + Vision Transformer
 
-> Adds a Vision Transformer in the bottleneck to capture global context.
+```mermaid
+flowchart TD
+    A[Input MRI\\n3 × 128 × 128] --> B[CNN Encoder\\nLocal features]
+    B --> C[Split into Patches\\n8 × 8 grid]
+    C --> D[Patch Embedding\\nTokens]
+    D --> E[Self Attention Layer 1]
+    E --> F[Self Attention Layer 2]
+    F --> G[Self Attention Layer 3]
+    G --> H[Self Attention Layer 4]
+    H --> I[Self Attention Layer 5]
+    I --> J[Self Attention Layer 6]
+    J --> K[Reshape to Feature Map]
+    K --> L[CNN Decoder\\nReconstruct mask]
+    L --> M[Output Mask\\n1 × 128 × 128]
 
-Input MRI (3 × 128 × 128)
-│
-▼
-┌─────────────────────┐
-│ CNN ENCODER │ Captures local features (edges, textures)
-└────────┬────────────┘
-│ skip connections
-▼
-┌─────────────────────────────────────────┐
-│ VISION TRANSFORMER │
-│ │
-│ Feature map → Split into patches │
-│ Patches → Sequence of tokens │
-│ Tokens → Self-Attention (6 layers)│
-│ │
-│ Every patch attends to every other │
-│ patch = understands GLOBAL context │
-└────────┬────────────────────────────────┘
-│
-▼
-┌─────────────────────┐
-│ CNN DECODER │ Reconstructs spatial mask
-└────────┬────────────┘
-▼
-Mask (1 × 128 × 128)
+    B -- skip connections --> L
 
+    style A fill:#4A90D9,color:#fff
+    style E fill:#8E44AD,color:#fff
+    style F fill:#8E44AD,color:#fff
+    style G fill:#8E44AD,color:#fff
+    style H fill:#8E44AD,color:#fff
+    style I fill:#8E44AD,color:#fff
+    style J fill:#8E44AD,color:#fff
+    style M fill:#27AE60,color:#fff
+```
 
-**Why Transformer helps:** CNN sees small windows. Transformer sees the whole image at once.
-Result: fewer false positives, better boundary detection.
+**Key idea:** Transformer attends to every patch simultaneously — understands global tumor context that CNN misses.
 
-**Improvement:** 0.5164 → 0.6525 Dice (+26%)
+**Result:** Fewer false positives, better boundary detection. Dice 0.5164 → 0.6525 (+26%)
 
 ---
 
-### 3️⃣ ResNet50-UNet — Transfer Learning ⭐ Best Model
+### 3️⃣ ResNet50-UNet — Transfer Learning ⭐ Best
 
-> Pretrained ResNet50 encoder — already knows 1.2M ImageNet images.
+```mermaid
+flowchart TD
+    A[Input MRI\\n3 × 256 × 256] --> B[ResNet50 Layer 1\\nEdges and colors\\nPretrained]
+    B --> C[ResNet50 Layer 2\\nShapes and curves\\nPretrained]
+    C --> D[ResNet50 Layer 3\\nParts and regions\\nPretrained]
+    D --> E[ResNet50 Layer 4\\nHigh-level features\\nPretrained]
+    E --> F[Decoder Block 1\\nUpConv trained fresh]
+    F --> G[Decoder Block 2\\nUpConv trained fresh]
+    G --> H[Decoder Block 3\\nUpConv trained fresh]
+    H --> I[Decoder Block 4\\nUpConv trained fresh]
+    I --> J[Output Mask\\n1 × 256 × 256]
 
-Input MRI (3 × 256 × 256)
-│
-▼
-┌──────────────────────────────────────┐
-│ ResNet50 ENCODER │
-│ (Pretrained on ImageNet) │
-│ │
-│ Layer 1 → edges, colors │
-│ Layer 2 → shapes, curves │ Already learned from
-│ Layer 3 → parts, regions │ 1.2 million images
-│ Layer 4 → high-level semantics │
-│ │
-│ 25M pretrained parameters │
-└──────────────────┬───────────────────┘
-│ skip connections
-▼
-┌──────────────────────────────────────┐
-│ DECODER │
-│ UpConv blocks (trained fresh) │ Learns medical context
-│ + skip connections │ on top of ImageNet knowledge
-└──────────────────┬───────────────────┘
-▼
-Mask (1 × 256 × 256)
+    B -- skip --> I
+    C -- skip --> H
+    D -- skip --> G
+    E -- skip --> F
 
+    style A fill:#4A90D9,color:#fff
+    style B fill:#E74C3C,color:#fff
+    style C fill:#E74C3C,color:#fff
+    style D fill:#E74C3C,color:#fff
+    style E fill:#E74C3C,color:#fff
+    style J fill:#27AE60,color:#fff
+```
 
-**Why it wins:**
+**Key idea:** Encoder pretrained on 1.2M ImageNet images — already knows visual patterns. Only decoder trained from scratch on MRI data.
 
-From scratch → learns from 762 images → limited knowledge
-Pretrained → starts from 1.2M images → rich visual knowledge
-adapted to medical imaging
-
-**Improvement:** 0.5164 → 0.7351 Dice (+42%)
+**Result:** Fastest convergence, best performance. Dice 0.5164 → 0.7351 (+42%)
 
 ---
 
-### 📊 Side-by-Side Comparison
-                U-Net          TransUNet      ResNet50-UNet
-                  │                │                │
+### 🔄 End-to-End Pipeline
 
-Encoder From scratch From scratch ImageNet pretrained
-Bottleneck Conv only Transformer ResNet blocks
-Image size 128×128 128×128 256×256
-Training data 20% 40% 100%
-Epochs 20 50 50
-│ │ │
-Dice Score 0.5164 0.6525 0.7351 ✅
-IoU Score 0.3758 0.5264 0.6178 ✅
-Precision 0.4340 0.6152 0.7610 ✅
-Recall 0.7582 0.8097 0.7535 ✅
+```mermaid
+flowchart LR
+    A[🗂️ Raw MRI Dataset\\n110 patients\\n3929 images] --> B[⚙️ Preprocessing\\nResize, Normalize\\nAugmentation]
+    B --> C[📦 DataLoader\\nTrain 70%\\nVal 15% Test 15%]
+    C --> D{Model Training}
+    D --> E[U-Net\\n20 epochs]
+    D --> F[TransUNet\\n50 epochs]
+    D --> G[ResNet-UNet\\n50 epochs]
+    E --> H[📊 Evaluation\\nDice IoU\\nPrecision Recall]
+    F --> H
+    G --> H
+    H --> I[🏆 Best Model\\nResNet-UNet\\nDice 0.7351]
+    I --> J[🖥️ Streamlit App\\nDeploy]
 
+    style A fill:#3498DB,color:#fff
+    style D fill:#E67E22,color:#fff
+    style I fill:#27AE60,color:#fff
+    style J fill:#9B59B6,color:#fff
+```
 
 ---
 
@@ -170,14 +164,15 @@ Recall 0.7582 0.8097 0.7535 ✅
 
 **[LGG Brain MRI Segmentation](https://www.kaggle.com/datasets/mateuszbuda/lgg-mri-segmentation)** — Kaggle
 
-110 patients
-3929 MRI slices total
-Image size: 256×256 RGB
-Labels: tumor mask (binary)
-Tumor: 34% | No tumor: 66%
-Split: 70% train / 15% val / 15% test
+- 110 patients, 3929 MRI slices
+- Image size: 256×256 RGB
+- Binary labels: tumor (1) vs background (0)
+- Class split: 34% tumor / 66% no tumor
+- Dataset split: 70% train / 15% val / 15% test
 
+---
 
+## 🗂️ Project Structure
 ---
 
 ## 🗂️ Project Structure
@@ -232,14 +227,7 @@ brain-tumor-segmentation/
 ## 🛠️ Tech Stack
 
 `PyTorch` `segmentation-models-pytorch` `albumentations`
-`einops` `OpenCV` `Streamlit` `Google Colab` `NumPy`
-
----
-
-## 👤 Author
-
-**Raghav**
-GitHub: [@raghav-29s](https://github.com/raghav-29s)
+`einops` `OpenCV`  `Google Colab` `NumPy`
 
 ---
 
