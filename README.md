@@ -5,8 +5,6 @@
 
 **Automatic pixel-level tumor segmentation from brain MRI scans using three deep learning architectures.**
 
-[Demo](#streamlit-app) • [Results](#results) • [Setup](#setup) • [Architecture](#architecture)
-
 </div>
 
 ---
