@@ -1,4 +1,4 @@
-"""# 🧠 Brain Tumor Segmentation using Deep Learning
+# 🧠 Brain Tumor Segmentation using Deep Learning
 
 <div align="center">
   
@@ -228,10 +228,4 @@ brain-tumor-segmentation/
 
 ---
 
-"""
 
-with open('/content/brain_tumor_segmentation/README.md', 'w') as f:
-    f.write(readme_content)
-
-print("✅ README.md written successfully")
-print(f"✅ Total characters: {len(readme_content):,}")
