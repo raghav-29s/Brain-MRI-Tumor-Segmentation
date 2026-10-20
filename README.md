@@ -1,4 +1,4 @@
-readme_content = """# 🧠 Brain Tumor Segmentation using Deep Learning
+"""# 🧠 Brain Tumor Segmentation using Deep Learning
 
 <div align="center">
   
