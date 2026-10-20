@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.env
+
+# Data (too large for GitHub)
+data/
+*.tif
+*.zip
+
+# Models (too large — store on Drive/HuggingFace)
+models/*.pth
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# OS
+.DS_Store
